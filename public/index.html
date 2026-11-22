@@ -2,407 +2,217 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
   <title>Chess Advisor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Spectral:wght@500;700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:        #0f1117;
-      --surface:   #1a1d27;
-      --border:    #2a2d3a;
-      --accent:    #4f8ef7;
-      --accent-h:  #6ba3ff;
-      --text:      #e8eaf0;
-      --muted:     #7a7f99;
-      --danger:    #e05c5c;
-      --success:   #4caf7d;
+      color-scheme: dark;
+      --paper:  #0a0a0a;
+      --ink:    #f2f2f2;
+      --muted:  #8c8c8c;
+      --line:   #2e2e2e;
+      --field:  #141414;
+      --hover:  #222222;
+      --chip:   #222222;
+      --green:  #f2f2f2;
+      --green-d:#ffffff;
+      --on-green:#0a0a0a;
+      --error:  #ff7a7a;
+      --serif: 'Spectral', Georgia, 'Times New Roman', serif;
+      --sans:  'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
     }
-
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
     }
 
-    /* ── Anti-debug overlay ── */
-    #dbg-overlay {
-      display: none;
-      position: fixed; inset: 0; z-index: 9999;
-      background: var(--bg);
-      flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 16px;
-      font-size: 1.1rem;
-      color: var(--danger);
-    }
-    #dbg-overlay.active { display: flex; }
-
-    /* ── Card ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 40px 44px;
+    main {
+      flex: 1;
       width: 100%;
-      max-width: 440px;
-      box-shadow: 0 8px 40px rgba(0,0,0,.45);
-    }
-
-    /* ── Board preview strip ── */
-    .board-strip {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-    }
-    .board-strip img {
-      width: 36px; height: 36px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #2a2520;
-      object-fit: contain;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 12vh 28px 48px;
     }
 
     h1 {
-      font-size: 1.55rem;
+      font-family: var(--serif);
       font-weight: 700;
-      margin-bottom: 6px;
-      letter-spacing: -0.02em;
+      font-size: clamp(2.6rem, 7vw, 4.4rem);
+      line-height: 1.02;
+      letter-spacing: -0.015em;
+      margin: 0 0 18px;
     }
-    .subtitle {
+    .lede {
+      font-size: 1.08rem;
+      max-width: 46ch;
       color: var(--muted);
-      font-size: 0.88rem;
-      margin-bottom: 28px;
-      line-height: 1.5;
+      margin: 0 0 40px;
     }
 
-    /* ── Gate (password) ── */
-    #gate { display: flex; flex-direction: column; gap: 14px; }
-    #gate label { font-size: 0.82rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
-
-    .input-row {
+    /* Form */
+    form { max-width: 380px; }
+    label { display: block; font-weight: 500; font-size: .95rem; margin-bottom: 8px; }
+    .field {
       display: flex;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      transition: border-color .18s;
+      border: 1.5px solid var(--line);
+      background: var(--field);
     }
-    .input-row:focus-within { border-color: var(--accent); }
-    .input-row.error { border-color: var(--danger); animation: shake .3s; }
-
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      75% { transform: translateX(6px); }
+    .field:focus-within { border-color: var(--green); outline: 2px solid var(--green); outline-offset: 2px; }
+    .field input {
+      flex: 1; min-width: 0;
+      border: 0; background: transparent;
+      padding: 12px 14px;
+      font: inherit; font-size: 1rem; color: var(--ink);
     }
-
-    .input-row input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      padding: 11px 14px;
-      color: var(--text);
-      font-size: 1rem;
-      letter-spacing: .08em;
+    .field input:focus { outline: none; }
+    .field button {
+      border: 0; border-left: 1.5px solid var(--line);
+      background: transparent; color: var(--ink);
+      font: inherit; font-size: .88rem; padding: 0 14px; cursor: pointer;
     }
-    .input-row input::placeholder { color: var(--muted); letter-spacing: normal; }
+    .field button:hover { background: var(--hover); }
+    .field.error { border-color: var(--error); animation: shake .3s; }
+    @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
-    .toggle-vis {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0 12px;
-      color: var(--muted);
-      font-size: 1rem;
-      line-height: 1;
-      transition: color .15s;
-    }
-    .toggle-vis:hover { color: var(--text); }
+    .msg { min-height: 1.5em; margin: 8px 0 14px; font-size: .9rem; color: var(--error); }
 
-    .error-msg {
-      color: var(--danger);
-      font-size: 0.82rem;
-      min-height: 1em;
-      display: none;
-    }
-    .error-msg.visible { display: block; }
-
-    /* ── Buttons ── */
     .btn {
+      display: inline-block;
+      background: var(--green); color: var(--on-green);
+      border: 0; padding: 12px 24px;
+      font: inherit; font-weight: 600; font-size: .98rem;
+      text-decoration: none; cursor: pointer;
+    }
+    .btn:hover { background: var(--green-d); }
+    .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+    .btn[disabled] { opacity: .55; cursor: wait; }
+
+    /* After unlock */
+    #download { display: none; max-width: 520px; }
+    #download.on { display: block; }
+    #download h2 { font-family: var(--serif); font-size: 1.5rem; margin: 0 0 4px; }
+    .file-meta { color: var(--muted); font-size: .92rem; margin: 0 0 20px; }
+    ol { padding-left: 1.25em; margin: 28px 0 0; }
+    li { margin-bottom: 8px; }
+    code, kbd {
+      font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+      font-size: .88em; background: var(--chip); padding: 1px 6px;
+    }
+
+    /* The piece band */
+    .band {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
       width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .18s, transform .1s, opacity .18s;
+      max-width: 880px;
+      margin: 64px auto 0;
+      padding: 0 28px;
     }
-    .btn:active { transform: scale(.97); }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent-h); }
-    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-
-    /* ── Download panel (hidden until correct pw) ── */
-    #download-panel { display: none; flex-direction: column; gap: 18px; }
-    #download-panel.visible { display: flex; }
-
-    .dl-box {
-      background: rgba(79,142,247,.08);
-      border: 1px solid rgba(79,142,247,.25);
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .dl-title {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-    .dl-meta {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .badge {
-      background: rgba(255,255,255,.07);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 3px 9px;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    .btn-dl {
-      background: var(--accent);
-      color: #fff;
-      padding: 11px 16px;
-      border-radius: 8px;
-      border: none;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      transition: background .18s, transform .1s;
-      display: block;
-    }
-    .btn-dl:hover { background: var(--accent-h); }
-    .btn-dl:active { transform: scale(.97); }
-
-    .instructions {
-      font-size: 0.82rem;
-      color: var(--muted);
-      line-height: 1.65;
-      border-top: 1px solid var(--border);
-      padding-top: 16px;
-    }
-    .instructions ol { padding-left: 18px; }
-    .instructions li { margin-bottom: 5px; }
-    .instructions code {
-      background: rgba(255,255,255,.07);
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: .85em;
+    .band img { width: 100%; aspect-ratio: 1; display: block; object-fit: cover; }
+    @media (max-width: 620px) {
+      .band { grid-template-columns: repeat(6, 1fr); }
+      main { padding-top: 8vh; }
     }
 
     footer {
-      margin-top: 20px;
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-align: center;
+      padding: 20px 28px 28px;
+      max-width: 880px; width: 100%; margin: 0 auto;
+      font-size: .82rem; color: var(--muted);
     }
+    @media (prefers-reduced-motion: reduce) { .field.error { animation: none; } }
   </style>
 </head>
 <body>
-
-  <!-- Anti-debug overlay -->
-  <div id="dbg-overlay">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-    <span>Access denied.</span>
-  </div>
-
-  <div class="card">
-
-    <!-- Piece preview (served from /pieces/) -->
-    <div class="board-strip" id="piece-strip"></div>
-
+  <main>
     <h1>Chess Advisor</h1>
-    <p class="subtitle">Automatic board detection &amp; Stockfish analysis overlay.<br>Enter the access code to download.</p>
+    <p class="lede">Finds the board on your screen and shows Stockfish’s best moves as an overlay. Windows only.</p>
 
-    <!-- Password gate -->
-    <div id="gate">
-      <label for="pw-input">Access code</label>
-      <div class="input-row" id="input-row">
-        <input id="pw-input" type="password" placeholder="••••••••" autocomplete="off" spellcheck="false" />
-        <button class="toggle-vis" id="toggle-vis" type="button" aria-label="Show/hide">👁</button>
+    <form id="gate" novalidate>
+      <label for="code">Access code</label>
+      <div class="field" id="field">
+        <input id="code" type="password" autocomplete="off" spellcheck="false" />
+        <button type="button" id="show" aria-pressed="false">Show</button>
       </div>
-      <span class="error-msg" id="err-msg">Incorrect access code.</span>
-      <button class="btn btn-primary" id="unlock-btn">Unlock</button>
-    </div>
+      <p class="msg" id="msg" role="alert"></p>
+      <button class="btn" id="go" type="submit">Get download</button>
+    </form>
 
-    <!-- Download panel -->
-    <div id="download-panel">
-      <div class="dl-box">
-        <div class="dl-title">Chess Advisor — Auto Detect</div>
-        <div class="dl-meta">
-          <span class="badge">Windows x64</span>
-          <span class="badge">~177 MB</span>
-          <span class="badge">No install required</span>
-        </div>
-        <a id="dl-link" class="btn-dl" href="DOWNLOAD_URL_HERE" download>
-          ⬇ Download
-        </a>
-      </div>
+    <section id="download" aria-live="polite">
+      <h2>ChessAdvisor_AutoDetect</h2>
+      <p class="file-meta">Windows x64, about 177 MB, no installer.</p>
+      <a class="btn" id="dl" href="#">Download</a>
+      <p class="file-meta" style="margin-top:12px">This link works for five minutes. Reload the page to get a new one.</p>
+      <ol>
+        <li>Extract the zip anywhere.</li>
+        <li>Run <code>ChessAdvisor_AutoDetect.exe</code>.</li>
+        <li>Click <strong>Start auto detect</strong>. The board is found automatically.</li>
+        <li>Press <kbd>F8</kbd> to toggle auto-move.</li>
+      </ol>
+    </section>
+  </main>
 
-      <div class="instructions">
-        <ol>
-          <li>Extract the zip anywhere.</li>
-          <li>Run <code>ChessAdvisor_AutoDetect.exe</code>.</li>
-          <li>Click <strong>Start auto detect</strong> — the board is found automatically.</li>
-          <li>Press <kbd>F8</kbd> to toggle auto-move.</li>
-        </ol>
-      </div>
-    </div>
-
-  </div>
-
-  <footer>Private distribution — do not share.</footer>
+  <div class="band" id="band" aria-hidden="true"></div>
+  <footer>Private build. Please don’t share the access code.</footer>
 
 <script>
-  // ── Anti-debug ──────────────────────────────────────────────────────────────
-  (function () {
-    const overlay = document.getElementById('dbg-overlay');
-
-    function block() {
-      overlay.classList.add('active');
-      // Wipe the DOM so nothing is readable after devtools open
-      document.getElementById('gate') && (document.getElementById('gate').innerHTML = '');
-      document.getElementById('download-panel') && (document.getElementById('download-panel').innerHTML = '');
-    }
-
-    // 1. Debugger timing trap — devtools slow down JS execution
-    function timingCheck() {
-      const t = performance.now();
-      // eslint-disable-next-line no-debugger
-      debugger;
-      if (performance.now() - t > 80) block();
-    }
-    setInterval(timingCheck, 1200);
-
-    // 2. Window size trap — devtools panel opens and changes outerHeight vs innerHeight
-    function sizeCheck() {
-      const threshold = 160;
-      const widthDiff  = window.outerWidth  - window.innerWidth;
-      const heightDiff = window.outerHeight - window.innerHeight;
-      if (widthDiff > threshold || heightDiff > threshold) block();
-    }
-    setInterval(sizeCheck, 800);
-
-    // 3. toString override detection — common devtools trick
-    const _toString = Function.prototype.toString;
-    let toStringCalled = false;
-    Object.defineProperty(Function.prototype, 'toString', {
-      get() {
-        if (!toStringCalled) { toStringCalled = true; block(); }
-        return _toString;
-      },
-      configurable: false,
-    });
-
-    // 4. console.log trap — fires when devtools console evaluates something
-    const _log = console.log;
-    let logCount = 0;
-    console.log = function (...args) {
-      logCount++;
-      if (logCount > 2) block();
-      return _log.apply(console, args);
-    };
-
-    // 5. Firebug legacy detection
-    if (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) {
-      block();
-    }
-  })();
-
-  // ── Piece strip ──────────────────────────────────────────────────────────────
-  const PREVIEW_PIECES = [
-    'whiteking_whitebg', 'whitequeen_whitebg', 'whiterook_whitebg',
-    'whitebishop_whitebg', 'whiteknight_whitebg', 'whitepawn_whitebg',
-    'blackking_brownbg', 'blackqueen_brownbg', 'blackrook_brownbg',
-    'blackbishop_brownbg', 'blackknight_brownbg', 'blackpawn_brownbg',
+  const PIECES = [
+    'whiteking_whitebg','whitequeen_whitebg','whiterook_whitebg','whitebishop_whitebg','whiteknight_whitebg','whitepawn_whitebg',
+    'blackking_brownbg','blackqueen_brownbg','blackrook_brownbg','blackbishop_brownbg','blackknight_brownbg','blackpawn_brownbg'
   ];
-  const strip = document.getElementById('piece-strip');
-  PREVIEW_PIECES.forEach(name => {
-    const img = document.createElement('img');
-    img.src = '/pieces/' + name + '.png';
-    img.alt = name;
-    img.width = 36; img.height = 36;
-    strip.appendChild(img);
+  const band = document.getElementById('band');
+  PIECES.forEach(n => {
+    const i = new Image();
+    i.src = '/pieces/' + n + '.png';
+    i.alt = '';
+    band.appendChild(i);
   });
 
-  // ── Password gate ─────────────────────────────────────────────────────────────
-  // Password is stored as a SHA-256 hex digest so the plaintext is never in source.
-  // To change it: run this in Node —
-  //   crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourpassword'))
-  //     .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
-  const PASSWORD_HASH = 'e3c652f0ba0b4801205814f8b6bc49672c4c74e25b497770bb89b22cdeb4e951';
+  const $ = id => document.getElementById(id);
+  const code = $('code'), field = $('field'), msg = $('msg'), go = $('go');
 
-  async function sha256hex(str) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  const pwInput    = document.getElementById('pw-input');
-  const unlockBtn  = document.getElementById('unlock-btn');
-  const errMsg     = document.getElementById('err-msg');
-  const inputRow   = document.getElementById('input-row');
-  const gate       = document.getElementById('gate');
-  const panel      = document.getElementById('download-panel');
-  const toggleVis  = document.getElementById('toggle-vis');
-
-  toggleVis.addEventListener('click', () => {
-    pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+  $('show').addEventListener('click', e => {
+    const hidden = code.type === 'password';
+    code.type = hidden ? 'text' : 'password';
+    e.target.textContent = hidden ? 'Hide' : 'Show';
+    e.target.setAttribute('aria-pressed', String(hidden));
   });
 
-  pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
-  unlockBtn.addEventListener('click', tryUnlock);
-
-  let attempts = 0;
-  async function tryUnlock() {
-    const val = pwInput.value.trim();
-    if (!val) return;
-    unlockBtn.disabled = true;
-
-    // Rate-limit: exponential back-off after each wrong attempt
-    if (attempts > 0) await new Promise(r => setTimeout(r, Math.min(3000, 400 * attempts)));
-
-    const hash = await sha256hex(val);
-    if (hash === PASSWORD_HASH) {
-      gate.style.display = 'none';
-      panel.classList.add('visible');
-    } else {
-      attempts++;
-      pwInput.value = '';
-      inputRow.classList.add('error');
-      errMsg.classList.add('visible');
-      setTimeout(() => inputRow.classList.remove('error'), 400);
-      unlockBtn.disabled = false;
+  $('gate').addEventListener('submit', async e => {
+    e.preventDefault();
+    const value = code.value.trim();
+    if (!value) { msg.textContent = 'Enter your access code.'; return; }
+    go.disabled = true; msg.textContent = '';
+    try {
+      const r = await fetch('/api/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: value })
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || 'Something went wrong. Try again.');
+      $('dl').href = '/api/download?token=' + encodeURIComponent(data.token);
+      $('gate').style.display = 'none';
+      $('download').classList.add('on');
+    } catch (err) {
+      code.value = '';
+      msg.textContent = err.message;
+      field.classList.add('error');
+      setTimeout(() => field.classList.remove('error'), 400);
+      go.disabled = false;
+      code.focus();
     }
-  }
+  });
 </script>
-
 </body>
 </html>
